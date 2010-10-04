@@ -3,10 +3,9 @@ require_once 'Pebble/Http.php';
 class Pebble_Core
 {
     protected static $_workingDir;
-    protected static $_options = array("listen_port"  => 8383,
-                                       "max_clients"  => 5,
-                                       "bind_address" => '127.0.0.1');
-    protected static $_clients = array();
+    protected static $_options = array("listen_port"     => 8383,
+                                       "bind_address"    => '127.0.0.1',
+                                       "request_handler" => 'serial');
     
     public static function init($cwd, $ini)
     {
@@ -16,6 +15,11 @@ class Pebble_Core
             self::$_options[$key] = $val;
         }
         return true;
+    }
+    
+    public static function getOptions()
+    {
+        return self::$_options;
     }
     
     
@@ -33,9 +37,13 @@ class Pebble_Core
                 $headers = Pebble_Http::parseRequestHeaders($input);
                 echo $headers['request']['uri'] . PHP_EOL;
                 $response = Pebble_Http::formatResponseHeaders(Pebble_Http::HTTP_STATUS_200);
-                echo $response;
+                $requestHandlerClassname = 'Pebble_Handler_' . ucfirst($options['request_handler']);
+                switch ($options['request_handler']) {
+                    case 'serial':
+                        $response = Pebble_Handler_Serial::handleRequest($headers);
+                        break;
+                }
                 socket_write($childSocket, $response);
-                socket_write($childSocket, $input);
                 socket_close($childSocket);
             } else {
                 echo "Socket Error: " . socket_last_error($childSocket) . "\n";
