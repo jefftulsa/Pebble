@@ -1,0 +1,18 @@
+#!/usr/bin/env php -q
+<?php
+set_time_limit(0);
+set_include_path(get_include_path . PATH_SEPARATOR . '/Users/josh/projects/Pebble');
+require_once('Pebble/Core.php');
+
+$cwd = getcwd();
+
+$ini = $cwd . "/pebble.ini";
+
+if (!file_exists($ini)) {
+    die('could not find pebble.ini');
+}
+
+if (Pebble_Core::init($cwd, $ini)) {
+    Pebble_Core::serve();
+}
+?>
