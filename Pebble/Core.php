@@ -1,19 +1,21 @@
 <?php
 require_once 'Pebble/Http.php';
+require_once 'Pebble/Dispatcher.php';
 class Pebble_Core
 {
     protected static $_workingDir;
     protected static $_options = array("listen_port"     => 8383,
                                        "bind_address"    => '127.0.0.1',
-                                       "request_handler" => 'serial');
+                                       "request_handler" => 'serial',
+                                       "document_root"   => ".");
+    protected static $_dispatcher;
     
-    public static function init($cwd, $ini)
+    public static function init($argv)
     {
-        self::$_workingDir = $cwd;
-        $options = parse_ini_file($ini);
-        foreach ($options as $key => $val) {
-            self::$_options[$key] = $val;
-        }
+        $dispatcherFilename = $argv[1];
+        $dispatcherClassname = str_replace('.php', '', $dispatcherFilename);
+        require_once($dispatcherFilename);
+        self::$_dispatcher = new $dispatcherClassname;
         return true;
     }
     
@@ -35,21 +37,14 @@ class Pebble_Core
             $input = socket_read($childSocket, 1024);
             if ($input) {
                 $headers = Pebble_Http::parseRequestHeaders($input);
-                echo $headers['request']['uri'] . PHP_EOL;
-                $response = Pebble_Http::formatResponseHeaders(Pebble_Http::HTTP_STATUS_200);
-                $requestHandlerClassname = 'Pebble_Handler_' . ucfirst($options['request_handler']);
-                switch ($options['request_handler']) {
-                    case 'serial':
-                        $response = Pebble_Handler_Serial::handleRequest($headers);
-                        break;
-                }
+                $dispatcher = self::$_dispatcher;
+                $response = $dispatcher->dispatch($headers['request']['uri']);
+                echo $response;
                 socket_write($childSocket, $response);
                 socket_close($childSocket);
             } else {
                 echo "Socket Error: " . socket_last_error($childSocket) . "\n";
             }
-            echo memory_get_usage(true) . PHP_EOL;
-
         }
         socket_close($sock);
     }
