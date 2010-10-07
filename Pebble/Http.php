@@ -5,6 +5,8 @@ class Pebble_Http
     const HTTP_STATUS_200 = '200 OK';
     const HTTP_STATUS_404 = '404 Not Found';
     
+    protected static $_defaultHeaders = array('Connection' => 'close');
+    
     
     public static function parseRequestHeaders($rawHeaders)
     {
@@ -27,6 +29,7 @@ class Pebble_Http
     public static function formatResponseHeaders($status, $headers = array())
     {
         $response = 'HTTP/1.0 ' . $status . self::HTTP_NEWLINE;
+        $headers = array_merge($headers, self::$_defaultHeaders);
         foreach ($headers as $key => $val) {
             $stringHeader = "$key: $val" . self::HTTP_NEWLINE;
             $response .= $stringHeader;

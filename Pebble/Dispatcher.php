@@ -21,18 +21,34 @@ class Pebble_Dispatcher
         }    
     }
     
-    public function dispatch($requestUri)
+    public function dispatch(Pebble_Http_Request $request)
     {
-        $urlParts = parse_url($requestUri);
+        $response = new Pebble_Http_Response();
+        $urlParts = parse_url($request->getUri());
         $path = $urlParts['path'];
         $query = $urlParts['query'];
+        parse_str($query, $params);
         if (isset($this->_routes[$path])) {
             $methodName =  $this->_routes[$path];
-            ob_start();
-            $this->$methodName(parse_str($query));
-            $output = ob_get_contents();
-            ob_end_clean();
-            return $output;
+            $response->setStatusCode(Pebble_Http_Response::HTTP_STATUS_200);
+            $response->setBody($this->$methodName($request, $response));
+            return $response;
+        } else if (file_exists(getcwd() . $request->getUri())) {
+            $file = file_get_contents(getcwd() . $request->getUri());
+            $response->setBody($file);
+            $response->setStatusCode(Pebble_Http_Response::HTTP_STATUS_200);
+        } else {
+            $response->setStatusCode(Pebble_Http_Response::HTTP_STATUS_400);
         }
+        return $response;
+    }
+    
+    public function render($view)
+    {
+        ob_start();
+        include(getcwd() . '/' . $view);
+        $output = ob_get_contents();
+        ob_end_clean();
+        return $output;
     }
 }
