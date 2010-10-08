@@ -1,0 +1,4 @@
+body { background-color: #dbdbdb; }
+#logo {text-align: center;}
+#messages p { font-family: Georgia, serif; size: 18px;}
+#messages { width: 600px; margin: 10px auto; background-color: white; border: 3px solid #434343; padding: 10px;}

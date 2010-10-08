@@ -4,6 +4,7 @@
 set_include_path(get_include_path() . PATH_SEPARATOR . '/Users/josh/projects/Pebble');
 require_once('Pebble/Core.php');
 
+
 if (Pebble_Core::init($argv)) {
     Pebble_Core::serve();
 }

@@ -6,12 +6,13 @@ class Pebble_Http_Response
     const HTTP_STATUS_404 = 404;
     
     const HTTP_MSG_500 = 'Server Error';
-    const HTTP_MSG_400 = 'Not Found';
+    const HTTP_MSG_404 = 'Not Found';
     const HTTP_MSG_200 = 'Ok';
     
     const HTTP_NEWLINE = "\r\n";
     
-    protected $_defaultHeaders = array('Connection' => 'close');
+    protected $_defaultHeaders = array('Connection' => 'close',
+                                       'Server'     => 'Pebble');
     protected $_headers = array();
     protected $_body;
     protected $_statusCode;
@@ -24,6 +25,11 @@ class Pebble_Http_Response
     public function setStatusCode($code)
     {
         $this->_statusCode = $code;
+    }
+    
+    public function getStatusCode()
+    {
+        return $this->_statusCode;
     }
     
     public function setHeaders($headers)
@@ -41,13 +47,16 @@ class Pebble_Http_Response
         $statusMessageConstant = 'HTTP_MSG_' . $this->_statusCode;
         $statusMessage = constant("self::$statusMessageConstant");
         
-        $response = 'HTTP/1.0 ' . $this->_statusCode . " " . $statusMessage . self::HTTP_NEWLINE;
+        $contentLength = strlen($this->_body);
+        $this->_headers['Content-length'] = $contentLength;
+        
+        $response = 'HTTP/1.1 ' . $this->_statusCode . " " . $statusMessage . self::HTTP_NEWLINE;
         $headers = array_merge($this->_headers, $this->_defaultHeaders);
         foreach ($headers as $key => $val) {
             $stringHeader = "$key: $val" . self::HTTP_NEWLINE;
             $response .= $stringHeader;
         }
-        $response .= self::HTTP_NEWLINE . self::HTTP_NEWLINE;
+        $response .= self::HTTP_NEWLINE;
         $response .= $this->_body;
         return $response;
     }

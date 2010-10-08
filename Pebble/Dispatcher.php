@@ -28,27 +28,41 @@ class Pebble_Dispatcher
         $path = $urlParts['path'];
         $query = $urlParts['query'];
         parse_str($query, $params);
+             
         if (isset($this->_routes[$path])) {
             $methodName =  $this->_routes[$path];
             $response->setStatusCode(Pebble_Http_Response::HTTP_STATUS_200);
             $response->setBody($this->$methodName($request, $response));
             return $response;
         } else if (file_exists(getcwd() . $request->getUri())) {
-            $file = file_get_contents(getcwd() . $request->getUri());
-            $response->setBody($file);
-            $response->setStatusCode(Pebble_Http_Response::HTTP_STATUS_200);
+            $filename = getcwd() . $request->getUri();
+            if (is_file($filename)) {
+                $file = file_get_contents($file);
+                $response->setBody($file);
+                $response->setStatusCode(Pebble_Http_Response::HTTP_STATUS_200);                
+            } else {
+                $this->_404($response);
+            }
+
+        } else if (file_exists(Pebble_Core::getPebblePath() . '/resources' . $request->getUri())) {        
+            $filename = Pebble_Core::getPebblePath() . '/resources' . $request->getUri();
+            if (!is_file($filename)) {
+                $this->_404($response);
+            } else {
+                $file = file_get_contents($filename);
+                $response->setBody($file);
+                $response->setStatusCode(Pebble_Http_Response::HTTP_STATUS_200);
+            }
         } else {
-            $response->setStatusCode(Pebble_Http_Response::HTTP_STATUS_400);
+            $this->_404($response);
         }
         return $response;
     }
     
-    public function render($view)
+    protected function _404($response)
     {
-        ob_start();
-        include(getcwd() . '/' . $view);
-        $output = ob_get_contents();
-        ob_end_clean();
-        return $output;
+        $response->setBody(file_get_contents(Pebble_Core::getPebblePath() . '/resources/pebble-notfound.phtml'));
+        $response->setStatusCode(Pebble_Http_Response::HTTP_STATUS_404);
+        return $response;
     }
 }
