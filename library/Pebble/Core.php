@@ -1,8 +1,9 @@
 <?php
-require_once 'Pebble/Http/Request.php';
-require_once 'Pebble/Http/Response.php';
-require_once 'Pebble/Dispatcher.php';
-require_once 'Pebble/Exception.php';
+require_once PEBBLE_ROOT . '/library/Pebble/Http/Request.php';
+require_once PEBBLE_ROOT . '/library/Pebble/Http/Response.php';
+require_once PEBBLE_ROOT . '/library/Pebble/Dispatcher.php';
+require_once PEBBLE_ROOT . '/library/Pebble/Exception.php';
+
 class Pebble_Core
 {
     protected static $_options = array("listen_port"     => 8383,
@@ -16,9 +17,9 @@ class Pebble_Core
     
     public static function init($argv)
     {
-        $dispatcherFilename = $argv[1];
+        $dispatcherFilename = basename($argv[1]);
         $dispatcherClassname = str_replace('.php', '', $dispatcherFilename);
-        require_once($dispatcherFilename);
+        require_once($argv[1]);
         self::$_dispatcher = new $dispatcherClassname();
         self::$_socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         return true;
@@ -28,12 +29,7 @@ class Pebble_Core
     {
         return self::$_options;
     }
-    
-    public static function getPebblePath()
-    {
-        return realpath(dirname(__FILE__) . '/../');
-    }
-    
+     
     public static function serve()
     {
         $options = self::$_options;
@@ -71,10 +67,5 @@ class Pebble_Core
             }
         }
         socket_close(self::$_socket);
-    }
-    
-    public static function shutdown()
-    {
-        self::$_continue = false;
     }
 }

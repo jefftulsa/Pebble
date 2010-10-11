@@ -9,7 +9,9 @@ class Pebble_Http_Request
     public function __construct($rawRequest)
     {
         $headers = self::parseRequestHeaders($rawRequest);
-        $this->_uri = $headers['request']['uri'];
+        $this->_url = $headers['request']['url'];
+        $urlparts = parse_url($this->_url);
+        $this->_path = $urlparts['path'];
         $this->_method = $headers['request']['method'];
         $this->_headers = $headers['headers'];
     }
@@ -19,9 +21,19 @@ class Pebble_Http_Request
         return $this->_headers;
     }
     
-    public function getUri()
+    public function getUrl()
     {
-        return $this->_uri;
+        return $this->_url;
+    }
+    
+    public function getPath()
+    {
+        return $this->_path;
+    }
+    
+    public function getQuery()
+    {
+        return $this->_query;
     }
     
     public function getMethod()
@@ -31,7 +43,7 @@ class Pebble_Http_Request
     
     public function __toString()
     {
-        return $this->_method . " " . $this->_uri;
+        return $this->_method . " " . $this->_url;
     }
     
     public static function parseRequestHeaders($rawHeaders)
@@ -40,7 +52,7 @@ class Pebble_Http_Request
         $rawRequest = array_shift($lines);
         $requestParts = explode(' ', $rawRequest);
         $request['method'] = $requestParts[0];
-        $request['uri'] = $requestParts[1];
+        $request['url'] = $requestParts[1];
         
         foreach ($lines as $line) {
             $parts = explode(':', $line);

@@ -1,8 +1,9 @@
 #!/usr/bin/env php -q
 <?php
-//temporary
-set_include_path(get_include_path() . PATH_SEPARATOR . '/Users/josh/projects/Pebble');
-require_once('Pebble/Core.php');
+$root = realpath(dirname(__FILE__) . '/../');
+define('PEBBLE_ROOT', $root);
+
+require_once PEBBLE_ROOT . '/library/Pebble/Core.php';
 
 
 if (Pebble_Core::init($argv)) {
